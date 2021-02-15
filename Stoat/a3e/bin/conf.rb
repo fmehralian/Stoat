@@ -35,6 +35,9 @@ class CONF
     # the troyd apk file
     @TROYD_APK_FILE
     
+    # the snapshot directory name
+    @SNAPSHOT_DIR
+    
     # the app directory name
     @APP_DIR_NAME
     
@@ -77,6 +80,10 @@ class CONF
        
         puts "#{@@DEBUG_STRING} I: apk file location: #{@TARGET_INSTRUMENTED_APK_FILE}"
         
+    end
+    
+    def set_snapshot_dir(dir)
+        @SNAPSHOT_DIR = dir
     end
     
     def create_fsm_building_dir (app_dir, apk_path, is_apk)
@@ -323,6 +330,10 @@ class CONF
     
     def get_ui_files_dir()
         @UI_XML_DIR
+    end
+    
+    def get_snapshot_dir()
+        @SNAPSHOT_DIR
     end
     
     def get_a3e_dfs_test_dir ()
