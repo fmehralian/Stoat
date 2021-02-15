@@ -225,8 +225,7 @@ end
 
 # get the current focused package name
 def get_current_package_name()
-    
-    dump_package_and_activity_cmd = "adb -s #{$emulator_serial} shell dumpsys window windows | grep -E 'mFocusedApp' "
+    dump_package_and_activity_cmd = "adb -s #{$emulator_serial} shell dumpsys activity activities | grep -E 'mFocusedApp' "
     lines = `#{dump_package_and_activity_cmd}`
     package_name_re = /(u0\s)(.*)\//
     pkg = lines.match(package_name_re)
@@ -238,10 +237,10 @@ end
 # get the current focus activity within the target package under test
 def get_current_activity_name(package_name_under_test)
   
-    dump_package_and_activity_cmd = "adb -s #{$emulator_serial} shell dumpsys window windows | grep -E 'mFocusedApp' "
+    dump_package_and_activity_cmd = "adb -s #{$emulator_serial} shell dumpsys activity activities | grep -E 'mFocusedApp' "
     line = `#{dump_package_and_activity_cmd}`
-    act_re = /\/(.*)\}\}\}/
-    act_match = line.match act_re
+    act_re = /\/(.*)/
+    act_match = line.match(act_re)
     s = act_match[1]
     # Note, different android devices give different activity name
     current_activity = ""
@@ -252,11 +251,11 @@ def get_current_activity_name(package_name_under_test)
     end
 
     if s[0].eql?('.') then
-    # The activity name (not complete) should be appended with the package name
-        # get the current focused activity when we are under the target package under test
-        current_activity = package_name_under_test + s
+      # The activity name (not complete) should be appended with the package name
+      # get the current focused activity when we are under the target package under test
+      current_activity = package_name_under_test + s
     else
-    current_activity = s
+      current_activity = s
     end
     
     return current_activity
