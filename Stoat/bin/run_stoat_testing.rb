@@ -153,7 +153,7 @@ def construct_fsm(app_dir, apk_path, avd_serial="emulator-5554", stoat_port="200
 		if $only_gui_exploration then
 			# start the stoat client for only gui exploration
 			Dir.chdir($STOAT_TOOL_DIR + "/a3e") do
-			  	execute_shell_cmd_output("#{$timeout_cmd} #{$model_construction_time} ruby ./bin/rec.rb --app #{app_dir} --apk #{apk_path} --dev #{avd_serial} --port #{stoat_port} --no-rec -loop --search weighted --events #{$max_event_number} --event_delay #{$event_delay} --project_type #{$project_type} --enable_dump_screenshot --disable_coverage_report") # --disable_crash_report
+			  	execute_shell_cmd_output("#{$timeout_cmd} #{$model_construction_time} ruby ./bin/rec.rb --app #{app_dir} --apk #{apk_path} --dev #{avd_serial} --port #{stoat_port} --no-rec -loop --search weighted --events #{$max_event_number} --event_delay #{$event_delay} --project_type #{$project_type} --enable_dump_screenshot --enable_dump_snapshot --disable_coverage_report") # --disable_crash_report
 			end
 		else
 			
