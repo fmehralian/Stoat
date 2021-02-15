@@ -62,13 +62,13 @@ require_relative 'crash_reporter'
 
 # strip away debug info to get the activity name
 def parse_act_names act_name
-	last_act=""
-	act_name.each_line do |line|
- 		print "I: [A3E] parse activity name: "+line+"\n"
-		last_act=line.split(/:/).last.strip!
- 		print "I: [A3E] the activity name: "+last_act+"\n"
-	end
-	last_act=last_act
+    last_act=""
+    act_name.each_line do |line|
+         print "I: [A3E] parse activity name: "+line+"\n"
+        last_act=line.split(/:/).last.strip!
+         print "I: [A3E] the activity name: "+last_act+"\n"
+    end
+    last_act=last_act
 end
 
 $default_A3E_iteration = 0
@@ -199,7 +199,7 @@ $coverager = Coverage.new()
 $g_maximum_events=0
 # the maximum line coverage
 $g_maximum_line_coverage=0
-# the number of executed events when reaching the maximum line coverage 
+# the number of executed events when reaching the maximum line coverage
 $g_maximum_line_coverage_events=0
 # the coverage txt file name
 $g_coverage_txt = ""
@@ -252,11 +252,11 @@ def get_current_activity_name(package_name_under_test)
     end
 
     if s[0].eql?('.') then
-	# The activity name (not complete) should be appended with the package name
-    	# get the current focused activity when we are under the target package under test
-    	current_activity = package_name_under_test + s
+    # The activity name (not complete) should be appended with the package name
+        # get the current focused activity when we are under the target package under test
+        current_activity = package_name_under_test + s
     else
-	current_activity = s
+    current_activity = s
     end
     
     return current_activity
@@ -270,7 +270,7 @@ def dump_ui_xml()
 
     # Use this version after finishing the running, it will dump more overall view hierarchy info
     # removed "timeout 10s", wait until get the xml layout file
-    UTIL.execute_shell_cmd("python ./bin/events/dump_verbose.py #{$emulator_serial} #{ui_file_name}") 
+    UTIL.execute_shell_cmd("python ./bin/events/dump_verbose.py #{$emulator_serial} #{ui_file_name}")
     UTIL.execute_shell_cmd("adb -s #{$emulator_serial} pull /storage/sdcard/window_dump.xml #{ui_file_name}")
     UTIL.execute_shell_cmd("adb -s #{$emulator_serial} shell rm /storage/sdcard/window_dump.xml")
 
@@ -287,6 +287,16 @@ def dump_screenshot()
     UTIL.execute_shell_cmd("adb -s #{$emulator_serial} shell rm /sdcard/stoat_screen.png")
 end
 
+# dump snapshots
+def dump_snapshot()
+    # dump the snapshot
+    snapshot_file_name = "S_#{$default_A3E_iteration}"
+    puts "***#{snapshot_file_name}"
+    snapshot_src_dir = $myConf.get_snapshot_dir()
+    snapshot_dest_dir = $myConf.get_ui_files_dir()
+    UTIL.execute_shell_cmd("adb -s #{$emulator_serial} emu avd snapshot save S_#{$default_A3E_iteration}")
+    UTIL.execute_shell_cmd("mv #{snapshot_src_dir}/#{snapshot_file_name}  #{snapshot_dest_dir}/#{snapshot_file_name}")
+end
 
 # get executable UI events from the current UI after a previous event has been executed
 def get_executable_ui_events (package_name_under_test)
@@ -295,18 +305,23 @@ def get_executable_ui_events (package_name_under_test)
   
   ui_file_name = dump_ui_xml()
 
-	# check page, TODO uncomment this when you are not testing real-world apps that requires login (e.g., wechat)
-	#if UTIL.need_login($emulator_serial, ui_file_name, "wechat") then
-	#	UTIL.login($emulator_serial, "wechat")
-	#	ui_file_name = dump_ui_xml() # redump the xml file
-	#end
-	
+    # check page, TODO uncomment this when you are not testing real-world apps that requires login (e.g., wechat)
+    #if UTIL.need_login($emulator_serial, ui_file_name, "wechat") then
+    #    UTIL.login($emulator_serial, "wechat")
+    #    ui_file_name = dump_ui_xml() # redump the xml file
+    #end
+    
 
   if $g_enable_screenshot then
-    # if screenshot is enabled, always dump the screenshot after the layout xml 
+    # if screenshot is enabled, always dump the screenshot after the layout xml
     dump_screenshot()
   end
-  
+
+  if $g_enable_snapshot then
+    # if snapshot is enabled, dump the snapshot
+    dump_snapshot()
+  end
+
   # A workaround to handle the failure of dumping ui xml
   if !File.exist?(ui_file_name) then
       # if fail to dump the ui xml
@@ -321,6 +336,9 @@ def get_executable_ui_events (package_name_under_test)
         ui_file_name = dump_ui_xml()
         if $g_enable_screenshot then
             dump_screenshot()
+        end
+        if $g_enable_snapshot then
+            dump_snapshot()
         end
         if !File.exist?(ui_file_name) then
           puts "[E]: failed to dump ui xml, Give up!!"
@@ -337,11 +355,11 @@ def get_executable_ui_events (package_name_under_test)
         # end
       end
   end
-  
+ 
   # get the current package name
   current_package = get_current_package_name()
   current_activity = ""
-  
+ 
   if current_package == package_name_under_test then
       # we are on the right way
       $recovery_keyevent_back = 0
@@ -350,21 +368,21 @@ def get_executable_ui_events (package_name_under_test)
 
       # record the acitivity coverage
       open($myConf.get_fsm_building_dir+ "/" + "explored_activity_list.txt", 'a') { |f|
-	f.puts current_activity
+    f.puts current_activity
       }
        
    elsif current_package != package_name_under_test && $recovery_keyevent_back ==0 then
       # we lost the focus of the app ?
-			
-			puts "current_package: #{current_package}"
-			puts "package_name_under_test: #{package_name_under_test}"
+            
+        puts "current_package: #{current_package}"
+        puts "package_name_under_test: #{package_name_under_test}"
 
-			$recovery_keyevent_back = $recovery_keyevent_back + 1
+        $recovery_keyevent_back = $recovery_keyevent_back + 1
 
-			#if $recovery_keyevent_back == 2 then # TODO Note this allows the app under test to step forward 2 steps, uncomment it when you do not need it
-      	ui_file_name = "/EMPTY_APP_STATE.xml"; # return an empty state
-			#	$recovery_keyevent_back = 3
-			#end
+        #if $recovery_keyevent_back == 2 then # TODO Note this allows the app under test to step forward 2 steps, uncomment it when you do not need it
+        ui_file_name = "/EMPTY_APP_STATE.xml"; # return an empty state
+        #    $recovery_keyevent_back = 3
+        #end
 
   elsif current_package != package_name_under_test && $recovery_keyevent_back == 1 then
       # fail to recover the app by the "back" event?
@@ -385,7 +403,7 @@ def get_executable_ui_events (package_name_under_test)
       exit 0
   end
   
-  # debug 
+  # debug
   cmd_i = 0
   puts "[A3E] cmd list in the current screen: "
   while cmd_i < actions.size do
@@ -394,7 +412,7 @@ def get_executable_ui_events (package_name_under_test)
   end
 
   # explicit return the currently executable events, the current focused package and activity
-  return actions,current_package,current_activity 
+  return actions,current_package,current_activity
   
 end
 
@@ -407,12 +425,12 @@ def reset_app (apk)
     act = $aapt.launcher apk
     # Here we add an additional option "-S", so that we will force stop the target app before starting the activity.
     # Without "-S", we cannot restart the app, since the app is already there, e.g., we will get this message
-    # "Activity not started, its current task has been brought to the front" 
-	  if act != nil then
-    	UTIL.execute_shell_cmd("adb -s " + $emulator_serial + " shell am start -S -n " + pkg + "/" + act)
+    # "Activity not started, its current task has been brought to the front"
+      if act != nil then
+        UTIL.execute_shell_cmd("adb -s " + $emulator_serial + " shell am start -S -n " + pkg + "/" + act)
     else
-			UTIL.execute_shell_cmd("adb -s " + $emulator_serial + " shell monkey -p " + pkg + " -c android.intent.category.LAUNCHER 1")
-		end
+            UTIL.execute_shell_cmd("adb -s " + $emulator_serial + " shell monkey -p " + pkg + " -c android.intent.category.LAUNCHER 1")
+        end
     UTIL.execute_shell_cmd("sleep #{$g_app_start_wait_time}") # Note this time is set to ensure the app can enter into a stable state
         
 end
@@ -422,7 +440,7 @@ def execute_event(action_cmd)
   
   puts "[D] the action cmd: #{action_cmd}"
   action_type = ""
-  action_param = "" 
+  action_param = ""
   edit_input_value = ""
   
   if action_cmd.start_with?("adb") then
@@ -485,7 +503,7 @@ def execute_event(action_cmd)
     
   else
     # get the action param value
-    first_quote_index = action_cmd.index("\'")  # get the first occurrence of ' 
+    first_quote_index = action_cmd.index("\'")  # get the first occurrence of '
     last_quote_index = action_cmd.rindex("\'")  # get the last occurrence of '
     # Note we should include the quotes to avoid the existence of whitespaces in the action_param_value
     action_param_value = action_cmd[first_quote_index..last_quote_index]
@@ -536,7 +554,7 @@ def do_main_job (package_name_under_test)
                 break
             end
         else
-        		  
+                  
             execute_event(action_cmd)
 
             # delay the next event
@@ -551,7 +569,7 @@ def do_main_job (package_name_under_test)
                  # record the crash
                  $g_crash_reporter.dump_crash_report_for_model_construction(10)
                  
-                 # exit and restart the crash reporter 
+                 # exit and restart the crash reporter
                  # the exit logging call is paired with the start logging call before the event-triggering loop
                  # when the ripping process ends, the start logging call is paired with the end logging call outside of the event-triggering loop
                  $g_crash_reporter.exit_logging()
@@ -612,7 +630,7 @@ def ripping_app (package_name_under_test, entry_activity_under_test, startr, nol
     
     total_exec_time = 0.0
     
-    if not $g_disable_crash_report then 
+    if not $g_disable_crash_report then
       # start crash logging
       $g_crash_reporter.start_logging()
     end
@@ -673,7 +691,7 @@ def ripping_app (package_name_under_test, entry_activity_under_test, startr, nol
                     # get the coverage em file
                     coverage_em = $myConf.get_em_coverage_file()
                     $g_coverage_txt = $myConf.get_coverage_files_dir() + "/" + "coverage.txt"
-                    merge_cmd = "java -cp " + $myConf.get_emma_jar() + " emma report -r txt -in " + str_coverage_files + coverage_em + " -Dreport.txt.out.file=" + $g_coverage_txt 
+                    merge_cmd = "java -cp " + $myConf.get_emma_jar() + " emma report -r txt -in " + str_coverage_files + coverage_em + " -Dreport.txt.out.file=" + $g_coverage_txt
                     puts "$#{merge_cmd}"
                     # execute the shell cmd
                     `#{merge_cmd}`
@@ -686,17 +704,17 @@ def ripping_app (package_name_under_test, entry_activity_under_test, startr, nol
                     
                   else # if the project was compiled by gradle, get code coverage by Jacoco
                     
-                    # coverage info format: "#covered_lines #line_coverage_percentage" 
+                    # coverage info format: "#covered_lines #line_coverage_percentage"
                     #cmd = "python #{$myConf.get_stoat_tool_dir()}/android_instrument/dump_coverage.py #{$myConf.get_app_absolute_dir_path()} fsm"
-		    #puts "$ #{cmd}"
-		    #coverage_info = `#{cmd}`
+            #puts "$ #{cmd}"
+            #coverage_info = `#{cmd}`
                     #puts "coverage_info: #{coverage_info}"
                     
                     #coverage_data = coverage_info.split(' ')
                     #lineCov = coverage_data[0].to_f
                     #lineCovPercentage = coverage_data[1].to_f*100
-		    lineCov = 0
-		    lineCovPercentage = 0
+            lineCov = 0
+            lineCovPercentage = 0
                     
                     puts "lineCov = #{lineCov}"
                     puts "lineCovPercentage = #{lineCovPercentage}"
@@ -771,7 +789,7 @@ def ripping_app (package_name_under_test, entry_activity_under_test, startr, nol
                 end
                 
                 # stop the ripping
-                break 
+                break
                 
                 # when it is a closed-source apk
             elsif $closed_source_apk == true && $default_A3E_iteration>=$g_maximum_events.to_i then
@@ -796,7 +814,7 @@ def ripping_app (package_name_under_test, entry_activity_under_test, startr, nol
                 end
                 
                 # stop the ripping
-                break 
+                break
             end
         end
     end
@@ -878,7 +896,7 @@ def prepare_env()
 #  `#{clear_log_buffer_cmd}`
   
   # start adb logcat filter, we focus on runtime errors, fatal errors, and ANR errors
-  # see https://developer.android.com/studio/command-line/logcat.html 
+  # see https://developer.android.com/studio/command-line/logcat.html
 #  error_log_file_name = $myConf.get_fsm_building_dir + "/" + "error_log.txt"
 #  error_log_cmd = "adb -s #{$emulator_serial} logcat *:E > #{error_log_file_name} &"
 #  puts "$ #{error_log_cmd}"
@@ -921,7 +939,7 @@ def identifyIdlePorts(start_port_number)
 end
 
 
-avd_name = "testAVD"
+avd_name = "testAVD_1"
 dev_name = ""
 avd_opt = "" # e.g. "-no-window"
 record = true
@@ -942,6 +960,7 @@ $g_project_type = "ant"
 $g_disable_crash_report = false
 $g_disable_coverage_report = false
 $g_enable_screenshot = false
+$g_enable_snapshot = false
 $g_app_start_wait_time = 5
 
 Dir.foreach(PARENT) {|f| fn = File.join(PARENT, f); File.delete(fn) if f != '.' && f != '..'}
@@ -966,7 +985,7 @@ OptionParser.new do |opts|
   opts.on("--act file", "activity names") do |a|
     activities_file_name = a
 #     print "pkg file name "+activities_file_name+"\n"
-	pkg_file_exists = true
+    pkg_file_exists = true
   end
   opts.on("--search search", "the search strategy to execute actions") do |h|
       $picker.setStrategy(h)
@@ -995,6 +1014,9 @@ OptionParser.new do |opts|
   end
   opts.on("--enable_dump_screenshot", "enable dumping screenshot") do
       $g_enable_screenshot = true
+  end
+  opts.on("--enable_dump_snapshot", "enable dumping snapshots") do
+      $g_enable_snapshot = true
   end
   opts.on("--no-rec", "do not record commands") do
     record = false
@@ -1029,6 +1051,7 @@ end
 # create the fsm building dir
 $myConf.set_project_type($g_project_type)
 $myConf.create_fsm_building_dir(app_dir, apk_name, $closed_source_apk)
+$myConf.set_snapshot_dir("~/.android/avd/#{avd_name}.avd/snapshots")
 apk_name = $myConf.get_instrumented_apk()
 ####
 
@@ -1068,10 +1091,10 @@ act = $aapt.launcher apk_name
 
 start_app_cmd = ""
 if act != nil then
-	start_app_cmd =  "adb -s " + $emulator_serial + " shell am start -S -n " + pkg + "/" + act
+    start_app_cmd =  "adb -s " + $emulator_serial + " shell am start -S -n " + pkg + "/" + act
 else
-	start_app_cmd =  "adb -s " + $emulator_serial + " shell monkey -p " + pkg + " -c android.intent.category.LAUNCHER 1"
-	act = "stoat-fake-entry-activity" # when the app does not has an explicit launchable activity, we use the monkey approach to start it
+    start_app_cmd =  "adb -s " + $emulator_serial + " shell monkey -p " + pkg + " -c android.intent.category.LAUNCHER 1"
+    act = "stoat-fake-entry-activity" # when the app does not has an explicit launchable activity, we use the monkey approach to start it
 end
 
 # start the app
