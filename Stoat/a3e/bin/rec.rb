@@ -290,7 +290,6 @@ end
 def dump_snapshot()
     # dump the snapshot
     snapshot_file_name = "S_#{$default_A3E_iteration}"
-    puts "***#{snapshot_file_name}"
     snapshot_src_dir = $myConf.get_snapshot_dir()
     snapshot_dest_dir = $myConf.get_ui_files_dir()
     UTIL.execute_shell_cmd("adb -s #{$emulator_serial} emu avd snapshot save S_#{$default_A3E_iteration}")
