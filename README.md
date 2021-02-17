@@ -1,3 +1,5 @@
+Updated the code to support android 30 and dumping snapshots capability.
+----
 # Stoat Prototype
 Stoat (STochastic model App Tester) is a guided approach to perform stochastic model-based testing on Android Apps. The idea is to thoroughly test the functionalities of an app from its GUI model, and validate the app’s behavior by enforcing various user/system interactions. 
 
